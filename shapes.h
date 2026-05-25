@@ -10,6 +10,13 @@ struct vec2 {
 };
 typedef struct vec2 Vec2;
 
+struct triangle {
+	Vec2 a;
+	Vec2 b;
+	Vec2 c;
+};
+typedef struct triangle Triangle;
+
 struct rect {
 	Vec2 pos;
 	Vec2 size;
@@ -24,6 +31,9 @@ typedef struct circle Circle;
 
 void draw_point(Canvas *canvas, Vec2 *point, uint32_t color);
 void draw_line(Canvas *canvas, Vec2 *a, Vec2 *b, uint32_t color);
+void draw_triangle(Canvas *canvas, Triangle *triangle, uint32_t color);
+void draw_fill_triangle(Canvas *canvas, Triangle *triangle, uint32_t color);
+void draw_thick_line(Canvas *canvas, Vec2 *a, Vec2 *b, float thick, uint32_t color);
 void draw_circle(Canvas *canvas, Circle *circle, uint32_t color);
 void draw_fill_circle(Canvas *canvas, Circle *circle, uint32_t color);
 void draw_rect(Canvas *canvas, Rect *rect, uint32_t color);
