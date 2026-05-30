@@ -1,15 +1,16 @@
+#include <SDL2/SDL.h>
+#include <string.h>
 #include "canvas.h"
 #include "shapes.h"
-#include <SDL2/SDL.h>
+#include "color.h"
+#include "text.h"
 
-#define WINDOW_TITLE "Smoke"
-#define WINDOW_WIDTH 1281
-#define WINDOW_HEIGHT 721
+#define WINDOW_TITLE "Text"
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
-#define PINK ((255 << 24) | (109 << 16) | (194 << 8) | 255)
-#define DARKPURPLE ((112 << 24) | (31 << 16) | (126 << 8 ) | 255)
-#define DARKGREEN ((0 << 24) | (82 << 16) | (17 << 8) | 255)
-#define DARKBLUE ((0 << 24) | (82 << 16) | (172 << 8) | 255)
+#define FONT_WIDTH 8
+#define FONT_HEIGHT 8
 
 Canvas canvas;
 SDL_Window *window = NULL;
@@ -55,11 +56,21 @@ int main(void)
 
 	canvas_fill(&canvas, DARKBLUE);
 
-	Vec2 center = { (WINDOW_WIDTH - 1) / 2, (WINDOW_HEIGHT - 1) / 2};
-	float radius = (WINDOW_WIDTH > WINDOW_HEIGHT) ? (WINDOW_HEIGHT - 1) / 2 : (WINDOW_WIDTH - 1) / 2;
-	Circle circle = { center, radius };
+	Rect rect = { { 200, 220 }, { 400, 160 } };
+	draw_fill_rect(&canvas, &rect, LIGHTGREY);
 
-	draw_fill_circle(&canvas, &circle, DARKPURPLE);
+	const char *str = "Hello World!";
+	int scale = 3;
+	int space = 2;
+
+	int len = strlen(str);
+	int text_w = len * FONT_WIDTH * scale + (len - 1) * space;
+	int text_h = FONT_HEIGHT * scale;
+
+	int x = rect.pos.x + (rect.size.x - text_w) * 0.5f;
+	int y = rect.pos.y + (rect.size.y - text_h) * 0.5f;
+
+	put_string_in_rect(&canvas, &rect, str, scale, space, BLACK);
 
 	update_window();
 

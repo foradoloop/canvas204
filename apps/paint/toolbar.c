@@ -288,7 +288,7 @@ void draw_new_button(void)
 	put_string_in_rect(
 			app.screen,
 			&opt,
-			"NEW*",
+			"NEW",
 			scale,
 			space,
 			BLACK
