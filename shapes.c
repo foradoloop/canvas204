@@ -76,6 +76,10 @@ void draw_fill_triangle(Canvas *canvas, Triangle *triangle, uint32_t color)
 {
 	Vec2 v[3] = { triangle->a, triangle->b, triangle->c };
 
+	v[0].x = roundf(v[0].x); v[0].y = roundf(v[0].y);
+	v[1].x = roundf(v[1].x); v[1].y = roundf(v[1].y);
+	v[2].x = roundf(v[2].x); v[2].y = roundf(v[2].y);
+
 	if (v[1].y < v[0].y) {
 		Vec2 t = v[0];
 		v[0] = v[1];
@@ -112,8 +116,8 @@ void draw_fill_triangle(Canvas *canvas, Triangle *triangle, uint32_t color)
 		xl = MIN(x0, x1);
 		xr = MAX(x0, x1);
 
-		sl = MAX(slope02, slope12);
-		sr = MIN(slope02, slope12);
+		sl = (x0 < x1) ? slope02 : slope12;
+		sr = (x0 < x1) ? slope12 : slope02;
 	} else if (y12 == 0) {
 		slope01 = x01 / y01;
 		slope02 = x02 / y02;
@@ -136,7 +140,7 @@ void draw_fill_triangle(Canvas *canvas, Triangle *triangle, uint32_t color)
 		sr = MAX(slope01, slope02);
 	}
 
-	for (float y = v[0].y; y <= v[1].y; y += 1.0f) {
+	for (float y = v[0].y; y < v[1].y; y += 1.0f) {
 		Vec2 a = { xl, y };
 		Vec2 b = { xr, y };
 
@@ -146,10 +150,12 @@ void draw_fill_triangle(Canvas *canvas, Triangle *triangle, uint32_t color)
 		xr += sr;
 	}
 
-	if (sl == slope01) {
-		sl = slope12;
-	} else {
-		sr = slope12;
+	if (y01 != 0 && y12 != 0) {
+		if (sl == slope01) {
+			sl = slope12;
+		} else {
+			sr = slope12;
+		}
 	}
 
 	for (float y = v[1].y; y <= v[2].y; y += 1.0f) {
@@ -182,9 +188,6 @@ void draw_thick_line(Canvas *canvas, Vec2 *a, Vec2 *b, float thick, uint32_t col
 	float half = thick * 0.5f;
 
 	Vec2 o = { n.x * half, n.y * half };
-
-	float ox = o.x;
-	float oy = o.y;
 
 	Vec2 p0 = { x0 + o.x, y0 + o.y };
 	Vec2 p1 = { x0 - o.x, y0 - o.y };
@@ -236,6 +239,14 @@ void draw_circle(Canvas *canvas, Circle *circle, uint32_t color)
 	}
 }
 
+void draw_thick_circle(Canvas *canvas, Circle *circle, float thick, uint32_t color)
+{
+	for (float t = 0; t <= thick; t += 1.0f) {
+		Circle c = { circle->center, circle->radius - t };
+		draw_circle(canvas, &c, color);
+	}
+}
+
 void draw_fill_circle(Canvas *canvas, Circle *circle, uint32_t color)
 {
 	int cx = circle->center.x;
@@ -269,33 +280,60 @@ void draw_fill_circle(Canvas *canvas, Circle *circle, uint32_t color)
 
 void draw_rect(Canvas *canvas, Rect *rect, uint32_t color)
 {
-	int x = rect->pos.x;
-	int y = rect->pos.y;
-	int w = rect->size.x;
-	int h = rect->size.y;
-
-	Vec2 lines[4][2] = {
-		{ { x, y }, { x + w - 1, y } },
-		{ { x, y + h - 1 }, { x + w - 1, y + h - 1 } },
-		{ { x, y }, { x, y + h - 1 } },
-		{ { x + w - 1, y }, { x + w - 1, y + h - 1 } }
-	};
-
-	for (int i = 0; i < 4; i++) {
-		draw_line(canvas, &lines[i][0], &lines[i][1], color);
-	}
+	draw_thick_rect(canvas, rect, 0.0f, color);
 }
 
-void draw_fill_rect(Canvas *canvas, Rect *rect, uint32_t color)
+void draw_thick_rect(Canvas *canvas, Rect *rect, float thick, uint32_t color)
 {
 	int x = rect->pos.x;
 	int y = rect->pos.y;
 	int w = rect->size.x;
 	int h = rect->size.y;
+	float half = thick * 0.5f;
 
-	for (int i = 0; i < h; i++) {
-		Vec2 points[2] = { { x, y + i }, { x + w - 1, y + i } };
-		draw_line(canvas, &points[0], &points[1], color);
+	Vec2 lines[4][2] = {
+		{ { x - half, y }, { x + w - 1 + half, y } },
+		{ { x - half, y + h - 1 }, { x + w - 1 + half, y + h - 1 } },
+		{ { x, y - half }, { x, y + h - 1 + half } },
+		{ { x + w - 1, y - half }, { x + w - 1, y + h - 1 + half } }
+	};
+
+	for (int i = 0; i < 4; i++) {
+		draw_thick_line(canvas, &lines[i][0], &lines[i][1], thick, color);
+	}
+}
+
+void draw_fill_rect(Canvas *canvas, Rect *rect, uint32_t color)
+{
+	float x = rect->pos.x;
+	float y = rect->pos.y;
+	float w = rect->size.x;
+	float h = rect->size.y;
+
+	Vec2 a = { x, y };
+	Vec2 b = { x + w - 1, y };
+	Vec2 c = { x + w - 1, y + h - 1 };
+	Vec2 d = { x, y + h - 1 };
+
+	Triangle t1 = { a, b, c };
+	Triangle t2 = { a, c, d };
+
+	draw_fill_triangle(canvas, &t1, color);
+	draw_fill_triangle(canvas, &t2, color);
+}
+
+void draw_polygon(Canvas *canvas, Vec2 *points, int num_points, uint32_t color)
+{
+	for (int i = 0; i < num_points; i++) {
+		draw_line(canvas, &points[i], &points[(i + 1) % num_points], color);
+	}
+}
+
+void draw_fill_polygon(Canvas *canvas, Vec2 *points, int num_points, uint32_t color)
+{
+	for (int i = 1; i < num_points - 1; i++) {
+		Triangle t = { points[0], points[i], points[i + 1] };
+		draw_fill_triangle(canvas, &t, color);
 	}
 }
 
