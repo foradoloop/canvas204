@@ -1,7 +1,6 @@
 
 #include "font8x8_basic.h"
-#include "canvas.h"
-#include "shapes.h"
+#include "text.h"
 #include <string.h>
 
 #define FONT_WIDTH 8
@@ -18,13 +17,13 @@ void put_string(
 	       )
 {
 	for (int i = 0; str[i]; i++) {
-		char *font = font8x8_basic[str[i]];
+		unsigned char *font = font8x8_basic[(int)str[i]];
 
 		for (int h = 0; h < FONT_HEIGHT; h++) {
-			char row = font[h];
+			unsigned char row = font[h];
 
 			for (int b = 0; b < 8; b++) {
-				char bit = (row >> b) & 0x01;
+				unsigned char bit = (row >> b) & 0x01;
 
 				if (bit) {
 					Vec2 point = {

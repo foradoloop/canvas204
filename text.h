@@ -2,6 +2,7 @@
 #define TEXT_H
 
 #include "canvas.h"
+#include "shapes.h"
 
 void put_string(
 		Canvas *canvas,
